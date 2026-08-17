@@ -1,0 +1,23 @@
+<mat-toolbar class="app-toolbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <mat-icon>receipt_long</mat-icon>
+    </span>
+    <span>{{ title }}</span>
+  </div>
+
+  <nav aria-label="Navegação principal">
+    <a mat-button routerLink="/products" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+      <mat-icon aria-hidden="true">inventory_2</mat-icon>
+      Produtos
+    </a>
+    <a mat-button routerLink="/invoices" routerLinkActive="active-link">
+      <mat-icon aria-hidden="true">description</mat-icon>
+      Notas Fiscais
+    </a>
+  </nav>
+</mat-toolbar>
+
+<main class="app-content">
+  <router-outlet />
+</main>

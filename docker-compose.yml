@@ -1,0 +1,83 @@
+services:
+  inventory-db:
+    image: postgres:18
+    container_name: korp-inventory-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-korp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-korp_dev_password}
+      POSTGRES_DB: ${INVENTORY_DB:-inventory_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - inventory-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-korp} -d ${INVENTORY_DB:-inventory_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  billing-db:
+    image: postgres:18
+    container_name: korp-billing-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-korp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-korp_dev_password}
+      POSTGRES_DB: ${BILLING_DB:-billing_db}
+    ports:
+      - "5434:5432"
+    volumes:
+      - billing-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-korp} -d ${BILLING_DB:-billing_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: services/inventory-service/Dockerfile
+    container_name: korp-inventory-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__InventoryDb: Host=inventory-db;Port=5432;Database=${INVENTORY_DB:-inventory_db};Username=${POSTGRES_USER:-korp};Password=${POSTGRES_PASSWORD:-korp_dev_password}
+      Cors__AllowedOrigins__0: http://localhost:4200
+    ports:
+      - "5001:8080"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: services/billing-service/Dockerfile
+    container_name: korp-billing-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__BillingDb: Host=billing-db;Port=5432;Database=${BILLING_DB:-billing_db};Username=${POSTGRES_USER:-korp};Password=${POSTGRES_PASSWORD:-korp_dev_password}
+      Services__Inventory__BaseUrl: http://inventory-service:8080
+      Cors__AllowedOrigins__0: http://localhost:4200
+    ports:
+      - "5002:8080"
+    depends_on:
+      billing-db:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  inventory-db-data:
+  billing-db-data:

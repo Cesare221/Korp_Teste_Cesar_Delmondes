@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/coverage/
+**/TestResults/
+**/test-results/
+**/playwright-report/
+.git/
+.vs/
+.vscode/
+.idea/
+*.log
+*.tmp
+*.bak
