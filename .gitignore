@@ -32,3 +32,5 @@ Thumbs.db
 !.env.example
 
 docker-data/
+
+graphify-out/
